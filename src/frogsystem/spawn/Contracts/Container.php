@@ -10,14 +10,14 @@ use Interop\Container\ContainerInterface;
 interface Container extends ContainerInterface
 {
     /**
-     * Sets an entry of the container by its identifier.
+     * Binds an abstract to a value in the container.
      *
-     * @param string $id Identifier of the entry to be set.
-     * @param mixed $value Value of the entry.
+     * @param string $abstract The abstract to be bound.
+     * @param mixed $value Value of the abstract.
      *
      * @param $value
      */
-    public function set($id, $value);
+    public function set($abstract, $value);
 
     /**
      * Delegates to dependency lookup to another container.
