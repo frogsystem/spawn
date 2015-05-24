@@ -1,6 +1,7 @@
 <?php
 namespace Frogsystem\Spawn;
 
+use Frogsystem\Spawn\Exceptions\NotFoundException;
 use Interop\Container\ContainerInterface;
 
 /**
@@ -15,6 +16,12 @@ class Container implements Contracts\Container, \ArrayAccess
      * @var array
      */
     protected $container = [];
+
+    /**
+     * Internal entries library.
+     * @var array
+     */
+    protected $internals = [];
 
     /**
      * The container for delegated lookup.
@@ -33,8 +40,6 @@ class Container implements Contracts\Container, \ArrayAccess
         if ($container) {
             $this->delegate = $container;
         }
-
-        // todo: self registration
     }
 
     /**
@@ -119,18 +124,37 @@ class Container implements Contracts\Container, \ArrayAccess
     public function get($abstract) {
         // element in container
         if ($this->has($abstract)) {
-            $entry = &$this->container[$abstract];
+            // retrieve the entry
+            return $this->retrieve($abstract, $this->container);
+        }
 
-            // Closures will be invoked with DI and the result returned
-            if (is_object($entry) && ($entry instanceof \Closure)) {
-                return $this->invoke($entry);
-            }
-
-            // return the unchanged value
-            return $this->container[$abstract];
+        // look for an internal
+        if (isset($this->$abstract)) {
+            return $this->$abstract;
         }
 
         throw new Exceptions\NotFoundException("Abstract '{$abstract}' not found.");
+    }
+
+    /**
+     * Helper method to retrieve an existing entry from a given library array.
+     * You have to make sure, that the entry exists in the library.
+     * @param string $abstract The abstract to get.
+     * @param &array $from The specified library.
+     * @return mixed  The entry.
+     */
+    protected function retrieve($abstract, &$from)
+    {
+        // get the entry
+        $entry = &$from[$abstract];
+
+        // Closures will be invoked with DI and the result returned
+        if (is_object($entry) && ($entry instanceof \Closure)) {
+            return $this->invoke($entry);
+        }
+
+        // return the unchanged value
+        return $this->container[$abstract];
     }
 
     /**
@@ -170,13 +194,14 @@ class Container implements Contracts\Container, \ArrayAccess
      */
     public function make($abstract, array $args = [])
     {
-        // get abstract from container
-        if ($this->has($abstract)) {
+        // try to get abstract from container
+        try {
             return $this->get($abstract);
-        }
 
         // Return new instance
-        return $this->build($abstract, $args);
+        } catch (NotFoundException $e) {
+            return $this->build($abstract, $args);
+        }
     }
 
     /**
@@ -255,47 +280,8 @@ class Container implements Contracts\Container, \ArrayAccess
         return $arguments;
     }
 
-
     /**
-     * Sets an entry as property to the given value.
-     * @param string $abstract    Identifier of the entry.
-     * @param mixed  $value The Value of the entry.
-     */
-    public function __set($abstract, $value)
-    {
-        $this->set($abstract, $value);
-    }
-
-    /**
-     * Returns the given entry via property.
-     * @param string $abstract Identifier of the entry.
-     * @return mixed The entry.
-     */
-    public function __get($abstract)
-    {
-        return $this->get($abstract);
-    }
-
-    /**
-     * Returns whether a property exists or not.
-     * @param $abstract
-     * @return bool
-     */
-    public function __isset($abstract)
-    {
-        return $this->has($abstract);
-    }
-
-    /**
-     * Unset an entry via property.
-     * @param $abstract
-     */
-    public function __unset($abstract)
-    {
-        unset($this[$abstract]);
-    }
-
-    /**
+     * Sets an abstract via ArrayAccess.
      * @param $abstract
      * @param $value
      */
@@ -305,6 +291,7 @@ class Container implements Contracts\Container, \ArrayAccess
     }
 
     /**
+     * Check existence of an abstract via ArrayAccess.
      * @param $abstract
      * @return bool
      */
@@ -323,6 +310,7 @@ class Container implements Contracts\Container, \ArrayAccess
     }
 
     /**
+     * Gets an abstract via ArrayAccess.
      * @param $abstract
      * @return null
      */
@@ -332,5 +320,52 @@ class Container implements Contracts\Container, \ArrayAccess
             return null;
         }
         return $this->get($abstract);
+    }
+
+
+    /**
+     * Sets an internal entry as property to the given value.
+     * @param string $internal    Identifier of the entry.
+     * @param mixed  $value The Value of the entry.
+     */
+    public function __set($internal, $value)
+    {
+        $this->internals[$internal] = $value;
+    }
+
+    /**
+     * Returns the given entry via property.
+     * @param string $internal Identifier of the entry.
+     * @return mixed The entry.
+     * @throws Exceptions\NotFoundException
+     */
+    public function __get($internal)
+    {
+        // element in container
+        if (isset($this->$internal)) {
+            // retrieve the entry
+            return $this->retrieve($internal, $this->internals);
+        }
+
+        throw new Exceptions\NotFoundException("Internal '{$internal}' not found.");
+    }
+
+    /**
+     * Returns whether an internal exists or not.
+     * @param $internal
+     * @return bool
+     */
+    public function __isset($internal)
+    {
+        return is_string($internal) && isset($this->internals[$internal]);
+    }
+
+    /**
+     * Unset an internal via property.
+     * @param $internal
+     */
+    public function __unset($internal)
+    {
+        unset($this->internals[$internal]);
     }
 }
