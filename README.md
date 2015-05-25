@@ -13,7 +13,7 @@ composer require frogsystem/spawn
 The packages follows the SemVer specification, and there will be full backward compatibility between minor versions.
 
 # Usage
-Start your container by making a new instance:
+Boot your container by creating a new instance:
 ```php
 $app = new Container();
 ````
