@@ -174,15 +174,21 @@ class Container implements Contracts\Container, \ArrayAccess
      * @param $concrete
      * @param array $args
      * @return mixed
+     * @throws Exceptions\ContainerException
      */
     public function build ($concrete, array $args = [])
     {
+        // build only from strings
+        if (!is_string($concrete)) {
+            throw new Exceptions\ContainerException("Unable to find concrete {(string) $concrete}");
+        }
+
         // get reflection and parameters
         $reflection = new \ReflectionClass($concrete);
         $constructor = $reflection->getConstructor();
 
         // Return new instance
-        $arguments = $this->inject($constructor, $args);
+        $arguments = $constructor ? $this->inject($constructor, $args) : [];
         return $reflection->newInstanceArgs($arguments);
     }
 
@@ -274,7 +280,7 @@ class Container implements Contracts\Container, \ArrayAccess
             }
 
             // Couldn't resolve the dependency
-            throw new Exceptions\ContainerException();
+            throw new Exceptions\ContainerException("Unable to resolve parameter '{$param->name}'.");
         }
 
         return $arguments;
