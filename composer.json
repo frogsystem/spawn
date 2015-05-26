@@ -3,7 +3,11 @@
   "description": "Spawn is a simple and lightweight implementation of an IoC application container and fully compatible with container-interop.",
   "keywords": ["container", "container-interop", "IoC", "DIC"],
   "homepage": "https://github.com/frogsystem/spawn",
-  "minimum-stability": "dev",
+  "support": {
+    "issues": "https://github.com/frogsystem/spawn/issues",
+    "source": "https://github.com/frogsystem/spawn"
+  },
+  "minimum-stability": "stable",
   "license": "MIT",
   "authors": [
     {
@@ -11,6 +15,11 @@
       "email": "mail@moritzkornher.de"
     }
   ],
+  "extra": {
+    "branch-alias": {
+      "dev-master": "1.0-dev"
+    }
+  },
   "require": {
     "php": ">=5.4.0",
     "container-interop/container-interop": "1.1.0"
