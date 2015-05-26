@@ -97,9 +97,10 @@ class Container implements Contracts\Container, \ArrayAccess
      */
     public function factory($value, array $args = [])
     {
-        return function () use ($value, $args) {
+        $factory = function () use ($value, $args) {
             return $this->make($value, $args);
         };
+        return $factory;
     }
 
     /**
@@ -232,7 +233,7 @@ class Container implements Contracts\Container, \ArrayAccess
         // closures, functions and other callables
         $reflection = new \ReflectionFunction($callable);
         $arguments = $this->inject($reflection, $args);
-        return $reflection->invokeArgs($arguments);
+        return call_user_func_array($callable, $arguments); // closures will loose scope if invoked by reflection
     }
 
     /**
