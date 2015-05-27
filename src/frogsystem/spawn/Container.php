@@ -147,7 +147,7 @@ class Container implements Contracts\Container, \ArrayAccess
     protected function retrieve($abstract, &$from)
     {
         // get the entry
-        $entry = &$from[$abstract];
+        $entry = $from[$abstract];
 
         // Closures will be invoked with DI and the result returned
         if (is_object($entry) && ($entry instanceof \Closure)) {
