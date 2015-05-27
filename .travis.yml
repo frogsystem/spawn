@@ -1,0 +1,35 @@
+# set language
+language: php
+
+# PHP versions
+php:
+  - 5.4
+  - 5.5
+  - 5.6
+  - hhvm
+  - 7.0
+
+# build matrix options
+matrix:
+  allow_failures:
+    - php: 7.0
+
+# nothing to sudo here
+sudo: false
+
+# only master
+branches:
+  only:
+    - master
+
+# install dependencies
+install:
+  - composer install -n
+
+# run the test suite
+script:
+  - phpunit --coverage-xml build/coverage-xml
+
+# reporting
+after_script:
+  - php vendor/bin/codacycoverage phpunit
