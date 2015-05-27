@@ -1,35 +1,32 @@
-# set language
-language: php
-
-# PHP versions
-php:
-  - 5.4
-  - 5.5
-  - 5.6
-  - hhvm
-  - 7.0
-
-# build matrix options
-matrix:
-  allow_failures:
-    - php: 7.0
-
-# nothing to sudo here
 sudo: false
 
-# only master
-branches:
-  only:
-    - master
+language: php
 
-# install dependencies
+matrix:
+  fast_finish: true
+  include:
+    - php: 5.5
+    - php: 5.6
+      env:
+        - EXECUTE_COVERAGE=true
+        - EXECUTE_CS_CHECK=true
+    - php: 7
+    - php: hhvm
+  allow_failures:
+    - php: 7
+
+notifications:
+  email: false
+
+before_install:
+  - if [[ $EXECUTE_COVERAGE != 'true' ]]; then phpenv config-rm xdebug.ini || return 0 ; fi
+
 install:
-  - composer install -n
+  - composer install
 
-# run the test suite
 script:
-  - vendor/bin/phpunit --coverage-xml build/coverage-xml
+  - if [[ $EXECUTE_COVERAGE == 'true' ]]; then ./vendor/bin/phpunit --coverage-clover clover.xml ; fi
+  - if [[ $EXECUTE_COVERAGE != 'true' ]]; then ./vendor/bin/phpunit ; fi
 
-# reporting
 after_script:
-  - php vendor/bin/codacycoverage phpunit
+  - if [[ $EXECUTE_COVERAGE == 'true' ]]; then ./vendor/bin/codacycoverage clover clover.xml ; fi
