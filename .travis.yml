@@ -28,7 +28,7 @@ install:
 
 # run the test suite
 script:
-  - phpunit --coverage-xml ./build/coverage-xml
+  - phpunit --coverage-xml=build/coverage-xml
 
 # reporting
 after_script:
