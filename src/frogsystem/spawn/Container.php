@@ -8,7 +8,7 @@ use Interop\Container\ContainerInterface;
  * Class Container
  * @package frogsystem\spawn
  */
-class Container implements Contracts\Container, \ArrayAccess
+class Container implements ContainerInterface, \ArrayAccess
 {
 
     /**
@@ -85,7 +85,7 @@ class Container implements Contracts\Container, \ArrayAccess
     public function one($value, array $args = [])
     {
         return $this->once(function() use ($value, $args) {
-            return $this->make($value, $args);
+            return $this->build($value, $args);
         });
     }
 
@@ -98,7 +98,7 @@ class Container implements Contracts\Container, \ArrayAccess
     public function factory($value, array $args = [])
     {
         $factory = function () use ($value, $args) {
-            return $this->make($value, $args);
+            return $this->build($value, $args);
         };
         return $factory;
     }
@@ -230,7 +230,7 @@ class Container implements Contracts\Container, \ArrayAccess
             return $reflection->invokeArgs($callable[0], $arguments);
         }
 
-        // closures, functions and other callables
+        // closures, functions and any other callable
         $reflection = new \ReflectionFunction($callable);
         $arguments = $this->inject($reflection, $args);
         return call_user_func_array($callable, $arguments); // closures will loose scope if invoked by reflection
@@ -269,7 +269,8 @@ class Container implements Contracts\Container, \ArrayAccess
                 $arguments[] = $args[$param->name];
                 unset($args[$param->name]);
                 continue;
-            } else if (!empty($args)) {
+            }
+            if (!empty($args)) {
                 $arguments[] = array_shift($args);
                 continue;
             }
@@ -281,7 +282,7 @@ class Container implements Contracts\Container, \ArrayAccess
             }
 
             // Couldn't resolve the dependency
-            throw new Exceptions\ContainerException("Unable to resolve parameter '{$param->name}'.");
+            throw new Exceptions\ContainerException("Unable to resolve parameter '{$param->name}' for function/method '{$reflection->getName()}'.");
         }
 
         return $arguments;
