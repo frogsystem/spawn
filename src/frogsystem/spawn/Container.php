@@ -40,6 +40,9 @@ class Container implements ContainerInterface, \ArrayAccess
         if ($container) {
             $this->delegate = $container;
         }
+
+        // set default container instance
+        $this->set('Interop\Container\ContainerInterface', $this);
     }
 
     /**
