@@ -26,7 +26,7 @@ abstract class Application extends Container implements ApplicationInterface
      * @param KernelInterface $kernel
      * @return mixed
      */
-    public function boot(KernelInterface $kernel)
+    public function load(KernelInterface $kernel)
     {
         // Register ServiceProviders
         foreach ($kernel->getServiceProviders() as $provider) {
@@ -35,7 +35,7 @@ abstract class Application extends Container implements ApplicationInterface
 
         // Connect Pluggables
         foreach ($kernel->getPluggables() as $pluggable) {
-            $this->register($this->make($pluggable));
+            $this->connect($this->make($pluggable));
         }
     }
 

@@ -18,4 +18,12 @@ interface KernelInterface
      * @return array
      */
     public function getPluggables();
+
+
+    /**
+     * Boot the given Application with this Kernel.
+     * @param ApplicationInterface $app
+     * @return mixed
+     */
+    public function boot(ApplicationInterface $app);
 }

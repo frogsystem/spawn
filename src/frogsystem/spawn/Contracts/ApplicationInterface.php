@@ -10,11 +10,11 @@ use Interop\Container\ContainerInterface;
 interface ApplicationInterface extends RunnableInterface, ContainerInterface
 {
     /**
-     * Boot a Kernel into the application.
+     * Load the application kernel.
      * @param KernelInterface $kernel
      * @return mixed
      */
-    public function boot(KernelInterface $kernel);
+    public function load(KernelInterface $kernel);
 
     /**
      * Connect a Pluggable to the application.
