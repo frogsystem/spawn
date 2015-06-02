@@ -37,7 +37,6 @@ abstract class Application extends Container implements ApplicationInterface
         foreach ($kernel->getPluggables() as $pluggable) {
             $this->register($this->make($pluggable));
         }
-
     }
 
     /**

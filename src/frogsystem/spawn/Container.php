@@ -43,6 +43,7 @@ class Container implements ContainerInterface, \ArrayAccess
 
         // set default container instance
         $this->set('Interop\Container\ContainerInterface', $this);
+        $this->set(get_called_class(), $this);
     }
 
     /**
