@@ -25,7 +25,7 @@ Retrieve an entry from the container with the standardized `get` method; use arr
 print $app->get('MyEntry'); // will print whatever value 'MyEntry' has
 print $app['MyEntry']; // will do the same
 ```
-However, if the entry is set to a callable, the callable will be invoked and its result returned instead. You will make use of this behavior to achieve different goals.
+However, if the entry is set to a callable, the callable will be invoked and its result returned instead. You will find use of this behavior to achieve different goals.
 ```php
 $app->set('MyEntry', function() {
     return 'Called!'
@@ -44,7 +44,7 @@ $app['MyEntry'] = $value;
 By design, the purpose of the container is to provide you with implementations for abstracts. To do so, you'll have to bind the abstract to a factory closure:
 ```php
 $app['ACME\MyContract'] = function() use ($app) {
-    return $app->make('MyImplementation');
+    return $app->find('MyImplementation');
 };
 ```
 There is a shorthand for this and other common use cases:
@@ -104,7 +104,7 @@ $app->has('MyEntry'); // true or false
 ## Internals
 You must only use the container to define your abstracts. They are meant to be shared with other containers and an implementation may be replaced by a different one during runtime. However, you will have cases where your code depends on a specific instance. Those internals are hold separately from the rest of the container and therefore have to be set as properties:
 ```php
-$app->config = $app->make('MyConfig');
+$app->config = $app->find('MyConfig');
 ```
 Using the magic setter will provide you with the same API as set out above. You may also define an internal explicit as class property, but a callable __will not__ be invoked on retrieval if set this way.
 
@@ -121,31 +121,31 @@ $app->config = $app['ConfigContract'] = $this->factory('MyConfig');
 ```
 
 ## Dependency Injection
-Spawn provides you with two methods to create new instances using Dependency Injection. Use `make` to get an implementation or previously stored instance for an abstract. The container will try to resolve any dependencies:
+Spawn provides you with two methods to create new instances using Dependency Injection. Use `find` to get an implementation or previously stored instance for an abstract. The container will try to resolve any dependencies:
 ```php
 class MyImplementation {
     __construct(OtherClass $other);
 }
 $app['MyClass'] = $this->factory('MyImplementation');
-$app->make('MyClass');
+$app->find('MyClass');
 ```
 
-Although you will normally use `make` to retrieve your instances, you may use `build` to create an object from a concrete class:
+Although you will normally use `find` to retrieve your instances, you may use `make` to create an object from a concrete class:
 ```php
 class MyClass {
     __construct(OtherClass $other);
 }
-$app->build('MyClass');
+$app->make('MyClass');
 ```
-In fact, `make` will simply return the result of `get` if there is an entry and the result of `build` otherwise. The magic happens when you set a container entry to closure. In the example above, the `factory` closure is fetched and invoked. By recursively calling `make` it will return a new instance of `MyImplementation`. Internally `build` is called this time, which takes care of resolving the dependencies.
+In fact, `find` will simply return the result of `get` if there is an entry and the result of `make` otherwise. The magic happens when you set a container entry to closure. In the example above, the `factory` closure is fetched and invoked. By recursively calling `find` it will return a new instance of `MyImplementation`. Internally `make` is called this time, which takes care of resolving the dependencies.
 
 ### Constructor arguments
-You may pass additional constructor arguments in an array as second parameter to `make` and `build`. Parameter names will be matched against array keys, but they will only be used if a dependency cannot be met else:
+You may pass additional constructor arguments in an array as second parameter to `find` and `make`. Parameter names will be matched against array keys, but they will only be used if a dependency cannot be met else:
 ```php
 class MyClass {
     __construct(OtherClass $other, $id);
 }
-$app->make('MyClass', ['id' => 42]);
+$app->find('MyClass', ['id' => 42]);
 ```
 
 
@@ -159,7 +159,7 @@ $app = new Container($delegateContainer);
 $app->delegate($delegateContainer);
 ```
 
-Delegate lookup enables sharing of entries across containers and allows to build up a **delegation queue**. See **Design principles** to learn how to utilize this feature properly. 
+Delegate lookup enables sharing of entries across containers and allows to make up a **delegation queue**. See **Design principles** to learn how to utilize this feature properly. 
 
 # Design principles
 - Implements container-interop

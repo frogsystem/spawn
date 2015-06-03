@@ -89,7 +89,7 @@ class Container implements ContainerInterface, \ArrayAccess
     public function one($value, array $args = [])
     {
         return $this->once(function() use ($value, $args) {
-            return $this->build($value, $args);
+            return $this->make($value, $args);
         });
     }
 
@@ -102,7 +102,7 @@ class Container implements ContainerInterface, \ArrayAccess
     public function factory($value, array $args = [])
     {
         $factory = function () use ($value, $args) {
-            return $this->build($value, $args);
+            return $this->make($value, $args);
         };
         return $factory;
     }
@@ -121,21 +121,17 @@ class Container implements ContainerInterface, \ArrayAccess
 
     /**
      * Invokes the registered entry for an abstract and returns the result.
-     * @throws Exceptions\NotFoundException  No entry was found for this identifier.
-     * @throws Exceptions\ContainerException Error while retrieving the entry.
+     *
      * @param string $abstract The abstract to store in the container.
-     * @return mixed The entry.
+     * @param array $args Array of arguments passed to a possible callable
+     * @return mixed No entry was found for this identifier.
+     * @throws NotFoundException
      */
-    public function get($abstract) {
+    public function get($abstract, $args = []) {
         // element in container
         if ($this->has($abstract)) {
             // retrieve the entry
-            return $this->retrieve($abstract, $this->container);
-        }
-
-        // look for an internal
-        if (isset($this->$abstract)) {
-            return $this->$abstract;
+            return $this->retrieve($this->container, $abstract, $args);
         }
 
         throw new Exceptions\NotFoundException("Abstract '{$abstract}' not found.");
@@ -143,19 +139,21 @@ class Container implements ContainerInterface, \ArrayAccess
 
     /**
      * Helper method to retrieve an existing entry from a given library array.
-     * You have to make sure, that the entry exists in the library.
+     * You have to find sure, that the entry exists in the library.
+     * @param $from
      * @param string $abstract The abstract to get.
-     * @param &array $from The specified library.
-     * @return mixed  The entry.
+     * @param array $args
+     * @return mixed The entry.
+     * @internal param $ &array $from The specified library.
      */
-    protected function retrieve($abstract, &$from)
+    private function retrieve(&$from, $abstract, $args = [])
     {
         // get the entry
         $entry = $from[$abstract];
 
         // Closures will be invoked with DI and the result returned
         if (is_object($entry) && ($entry instanceof \Closure)) {
-            return $this->invoke($entry);
+            return $this->invoke($entry, $args);
         }
 
         // return the unchanged value
@@ -175,13 +173,13 @@ class Container implements ContainerInterface, \ArrayAccess
 
 
     /**
-     * Build a new instance of a concrete using Dependency Injection.
+     * Make a new instance of a concrete using Dependency Injection.
      * @param $concrete
      * @param array $args
      * @return mixed
      * @throws Exceptions\ContainerException
      */
-    public function build ($concrete, array $args = [])
+    public function make($concrete, array $args = [])
     {
         // build only from strings
         if (!is_string($concrete)) {
@@ -198,21 +196,25 @@ class Container implements ContainerInterface, \ArrayAccess
     }
 
     /**
-     * Make a instance of any abstract using the container or build a new object from a concrete if possible.
+     * Find a instance of any abstract in the container, the delegate or by making a new object from a concrete if possible.
      * @param string $abstract
      * @param array $args
      * @return mixed
      */
-    public function make($abstract, array $args = [])
+    public function find($abstract, array $args = [])
     {
         // try to get abstract from container
-        try {
-            return $this->get($abstract);
-
-        // Return new instance
-        } catch (NotFoundException $e) {
-            return $this->build($abstract, $args);
+        if ($this->has($abstract)) {
+            return $this->get($abstract, $args);
         }
+
+        // try to get abstract from delegate
+        if ($this->delegate->has($abstract)) {
+            return $this->delegate->get($abstract, $args);
+        }
+
+        // Try to return new instance
+        return $this->make($abstract, $args);
     }
 
     /**
@@ -356,7 +358,7 @@ class Container implements ContainerInterface, \ArrayAccess
         // element in container
         if (isset($this->$internal)) {
             // retrieve the entry
-            return $this->retrieve($internal, $this->internals);
+            return $this->retrieve($this->internals, $internal);
         }
 
         throw new Exceptions\NotFoundException("Internal '{$internal}' not found.");
