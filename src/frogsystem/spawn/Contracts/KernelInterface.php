@@ -8,12 +8,6 @@ namespace Frogsystem\Spawn\Contracts;
 interface KernelInterface
 {
     /**
-     * Get a list of all Kernel ServiceProviders
-     * @return array
-     */
-    public function getServiceProviders();
-
-    /**
      * Get a list of all Kernel Pluggables
      * @return array
      */
@@ -21,9 +15,9 @@ interface KernelInterface
 
 
     /**
-     * Boot the given Application with this Kernel.
-     * @param ApplicationInterface $app
-     * @return mixed
+     * Boot an application from instance or class name. Will return the booted application.
+     * @param ApplicationInterface|string $app
+     * @return ApplicationInterface
      */
-    public function boot(ApplicationInterface $app);
+    public function boot($app);
 }

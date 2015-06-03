@@ -13,21 +13,7 @@ class Kernel implements KernelInterface
     /**
      * @var array
      */
-    protected $providers = [];
-
-    /**
-     * @var array
-     */
     protected $pluggables = [];
-
-    /**
-     * Get a list of all Kernel ServiceProviders
-     * @return array
-     */
-    public function getServiceProviders()
-    {
-        return $this->providers;
-    }
 
     /**
      * Get a list of all Kernel Pluggables
@@ -39,13 +25,19 @@ class Kernel implements KernelInterface
     }
 
     /**
-     * Boot the given application with this kernel.
-     * @param ApplicationInterface $app
-     * @return mixed
+     * Boot an application from instance or class name. Will return the booted application.
+     * @param ApplicationInterface|string $app
+     * @return ApplicationInterface
      */
-    public function boot(ApplicationInterface $app)
+    public function boot($app)
     {
+        // build application
+        if (is_string($app)) {
+            $app = new $app;
+        }
+
         // Load the kernel into the application
         $app->load($this);
+        return $app;
     }
 }
