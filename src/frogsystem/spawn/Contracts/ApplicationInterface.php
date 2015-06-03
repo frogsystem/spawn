@@ -22,11 +22,4 @@ interface ApplicationInterface extends RunnableInterface, ContainerInterface
      * @return mixed
      */
     public function connect(PluggableInterface $pluggable);
-
-    /**
-     * Register a ServiceProvider with the application.
-     * @param ServiceProviderInterface $provider
-     * @return mixed
-     */
-    public function register(ServiceProviderInterface $provider);
 }
