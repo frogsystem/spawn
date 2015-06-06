@@ -157,7 +157,7 @@ class Container implements ContainerInterface, \ArrayAccess
         }
 
         // return the unchanged value
-        return $this->container[$abstract];
+        return $entry;
     }
 
     /**
