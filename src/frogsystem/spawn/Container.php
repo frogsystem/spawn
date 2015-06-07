@@ -196,18 +196,13 @@ class Container implements ContainerInterface, \ArrayAccess
     }
 
     /**
-     * Find a instance of any abstract in the container, the delegate or by making a new object from a concrete if possible.
+     * Find a instance of any abstract in delegate or make a new object from a concrete if possible.
      * @param string $abstract
      * @param array $args
      * @return mixed
      */
     public function find($abstract, array $args = [])
     {
-        // try to get abstract from container
-        if ($this->has($abstract)) {
-            return $this->get($abstract, $args);
-        }
-
         // try to get abstract from delegate
         if ($this->delegate->has($abstract)) {
             return $this->delegate->get($abstract, $args);
@@ -257,6 +252,14 @@ class Container implements ContainerInterface, \ArrayAccess
         // Build argument list
         $arguments = [];
         foreach ($parameters as $param) {
+            // From argument list
+            $key = isset($args[$param->getPosition()]) ? $param->getPosition() : $param->name;
+            if (array_key_exists($key, $args)) {
+                $arguments[] = $args[$key];
+                unset($args[$key]);
+                continue;
+            }
+
             // DI
             $class = $param->getClass();
             if ($class && $this->delegate->has($class->name)) {
@@ -270,16 +273,6 @@ class Container implements ContainerInterface, \ArrayAccess
                 continue;
             }
 
-            // from argument list
-            if (array_key_exists($param->name, $args)) {
-                $arguments[] = $args[$param->name];
-                unset($args[$param->name]);
-                continue;
-            }
-            if (!empty($args)) {
-                $arguments[] = array_shift($args);
-                continue;
-            }
 
             // optional parameter with default value
             if ($param->isDefaultValueAvailable()) {
