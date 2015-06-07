@@ -43,7 +43,6 @@ class Container implements ContainerInterface, \ArrayAccess
 
         // set default container instance
         $this->set('Interop\Container\ContainerInterface', $this);
-        $this->set(get_called_class(), $this);
     }
 
     /**
@@ -74,7 +73,7 @@ class Container implements ContainerInterface, \ArrayAccess
         return function () use ($value) {
             static $result;
             if (!$result) {
-                $result = $value();
+                $result = $this->invoke($value);
             }
             return $result;
         };
