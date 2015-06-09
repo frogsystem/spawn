@@ -54,26 +54,30 @@ class Container implements ContainerInterface, \ArrayAccess
     }
 
     /**
-     * Binds the abstract to a value.
-     * @param string $abstract
-     * @param mixed $value
+     * Shorthand for a factory.
+     * @param string $concrete
+     * @param array $args
+     * @return Callable
      */
-    public function set($abstract, $value)
+    public function factory($concrete, array $args = [])
     {
-        $this->container[$abstract] = $value;
+        return function () use ($concrete, $args) {
+            return $this->make($concrete, $args);
+        };
     }
 
     /**
      * Shorthand to invoke the callable just once (when needed) and return its result afterwards.
-     * @param callable $value
+     * @param callable $callable
+     * @param array $args
      * @return callable
      */
-    public function once(callable $value)
+    public function once(callable $callable, array $args = [])
     {
-        return function () use ($value) {
+        return function () use ($callable, $args) {
             static $result;
             if (!$result) {
-                $result = $this->invoke($value);
+                $result = $this->invoke($callable, $args);
             }
             return $result;
         };
@@ -81,41 +85,35 @@ class Container implements ContainerInterface, \ArrayAccess
 
     /**
      * Shorthand to create a singleton like instance with additional arguments.
-     * @param string $value
+     * @param string $concrete
      * @param array $args
      * @return callable
      */
-    public function one($value, array $args = [])
+    public function one($concrete, array $args = [])
     {
-        return $this->once(function() use ($value, $args) {
-            return $this->make($value, $args);
-        });
-    }
-
-    /**
-     * Shorthand for a factory.
-     * @param string $value
-     * @param array $args
-     * @return Callable
-     */
-    public function factory($value, array $args = [])
-    {
-        $factory = function () use ($value, $args) {
-            return $this->make($value, $args);
-        };
-        return $factory;
+        return $this->once($this->factory($concrete, $args));
     }
 
     /**
      * Protect a value from being executed as callable on retrieving.
-     * @param $value
+     * @param $callable
      * @return Callable
      */
-    public function protect($value)
+    public function protect($callable)
     {
-        return function () use ($value) {
-            return $value;
+        return function () use ($callable) {
+            return $callable;
         };
+    }
+
+    /**
+     * Binds the abstract to a value.
+     * @param string $abstract
+     * @param mixed $value
+     */
+    public function set($abstract, $value)
+    {
+        $this->container[$abstract] = $value;
     }
 
     /**
@@ -251,29 +249,30 @@ class Container implements ContainerInterface, \ArrayAccess
         // Build argument list
         $arguments = [];
         foreach ($parameters as $param) {
-            // From argument list
-            $key = isset($args[$param->getPosition()]) ? $param->getPosition() : $param->name;
+            // Get class
+            $class = $param->getClass();
+
+            // From argument array (class or parameter name)
+            $key = $class && isset($args[$class->name]) ? $class->name: $param->name;
             if (array_key_exists($key, $args)) {
                 $arguments[] = $args[$key];
                 unset($args[$key]);
                 continue;
             }
 
-            // DI
-            $class = $param->getClass();
+            // Delegated Lookup
             if ($class && $this->delegate->has($class->name)) {
                 $arguments[] = $this->delegate->get($class->name);
                 continue;
             }
 
-            // class exists
+            // Real class
             if ($class && class_exists($class->name)) {
                 $arguments[] = $this->make($class->name);
                 continue;
             }
 
-
-            // optional parameter with default value
+            // Skip optional parameter with default value
             if ($param->isDefaultValueAvailable()) {
                 $arguments[] =  $param->getDefaultValue();
                 continue;
