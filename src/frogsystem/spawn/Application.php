@@ -4,6 +4,7 @@ namespace Frogsystem\Spawn;
 use Frogsystem\Spawn\Contracts\ApplicationInterface;
 use Frogsystem\Spawn\Contracts\KernelInterface;
 use Frogsystem\Spawn\Contracts\PluggableInterface;
+use Frogsystem\Spawn\Contracts\RunnableInterface;
 
 /**
  * Class Application
@@ -42,5 +43,12 @@ abstract class Application extends Container implements ApplicationInterface
     /**
      * @return mixed
      */
-    abstract public function run();
+    public function run() {
+        // run pluggables
+        foreach ($this->pluggables as $pluggable) {
+            if ($pluggable instanceof RunnableInterface) {
+                $pluggable->run();
+            }
+        }
+    }
 }
