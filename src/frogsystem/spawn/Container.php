@@ -42,14 +42,15 @@ class Container implements ContainerInterface, \ArrayAccess
         }
 
         // set default container instance
-        $this->set('Interop\Container\ContainerInterface', $this);
+        $this->set(ContainerInterface::class, $this);
     }
 
     /**
      * Delegates to dependency lookup to another container.
      * @param ContainerInterface $container The delegated container.
      */
-    public function delegate(ContainerInterface $container) {
+    public function delegate(ContainerInterface $container)
+    {
         $this->delegate = $container;
     }
 
@@ -124,7 +125,8 @@ class Container implements ContainerInterface, \ArrayAccess
      * @return mixed No entry was found for this identifier.
      * @throws NotFoundException
      */
-    public function get($abstract, $args = []) {
+    public function get($abstract, $args = [])
+    {
         // element in container
         if ($this->has($abstract)) {
             // retrieve the entry
@@ -253,7 +255,7 @@ class Container implements ContainerInterface, \ArrayAccess
             $class = $param->getClass();
 
             // From argument array (class or parameter name)
-            $key = $class && isset($args[$class->name]) ? $class->name: $param->name;
+            $key = $class && isset($args[$class->name]) ? $class->name : $param->name;
             if (array_key_exists($key, $args)) {
                 $arguments[] = $args[$key];
                 unset($args[$key]);
@@ -274,7 +276,7 @@ class Container implements ContainerInterface, \ArrayAccess
 
             // Skip optional parameter with default value
             if ($param->isDefaultValueAvailable()) {
-                $arguments[] =  $param->getDefaultValue();
+                $arguments[] = $param->getDefaultValue();
                 continue;
             }
 
@@ -330,8 +332,8 @@ class Container implements ContainerInterface, \ArrayAccess
 
     /**
      * Sets an internal entry as property to the given value.
-     * @param string $internal    Identifier of the entry.
-     * @param mixed  $value The Value of the entry.
+     * @param string $internal Identifier of the entry.
+     * @param mixed $value The Value of the entry.
      */
     public function __set($internal, $value)
     {
