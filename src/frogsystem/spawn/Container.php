@@ -286,7 +286,7 @@ class Container implements ContainerInterface, \ArrayAccess
                     "Unable to resolve parameter '%s\$%s' for function/method '%s'.",
                     ($class ? $class->getName() . ' ' : ''),
                     $param->name,
-                    ($reflection instanceof \ReflectionMethod ? $reflection->getDeclaringClass() . '::' . $reflection->getName() : $reflection->getName())
+                    ($reflection instanceof \ReflectionMethod ? $reflection->getDeclaringClass()->getName() . '::' . $reflection->getName() : $reflection->getName())
                 )
             );
         }
