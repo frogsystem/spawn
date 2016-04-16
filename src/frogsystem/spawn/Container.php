@@ -281,7 +281,14 @@ class Container implements ContainerInterface, \ArrayAccess
             }
 
             // Couldn't resolve the dependency
-            throw new Exceptions\ContainerException("Unable to resolve parameter '{$param->name}' for function/method '{$reflection->getName()}'.");
+            throw new Exceptions\ContainerException(
+                sprintf(
+                    "Unable to resolve parameter '%s\$%s' for function/method '%s'.",
+                    ($class ? $class->getName() . ' ' : ''),
+                    $param->name,
+                    ($reflection instanceof \ReflectionMethod ? $reflection->getDeclaringClass() . '::' . $reflection->getName() : $reflection->getName())
+                )
+            );
         }
 
         return $arguments;
