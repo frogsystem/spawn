@@ -42,14 +42,15 @@ class Container implements ContainerInterface, \ArrayAccess
         }
 
         // set default container instance
-        $this->set('Interop\Container\ContainerInterface', $this);
+        $this->set(ContainerInterface::class, $this);
     }
 
     /**
      * Delegates to dependency lookup to another container.
      * @param ContainerInterface $container The delegated container.
      */
-    public function delegate(ContainerInterface $container) {
+    public function delegate(ContainerInterface $container)
+    {
         $this->delegate = $container;
     }
 
@@ -124,7 +125,8 @@ class Container implements ContainerInterface, \ArrayAccess
      * @return mixed No entry was found for this identifier.
      * @throws NotFoundException
      */
-    public function get($abstract, $args = []) {
+    public function get($abstract, $args = [])
+    {
         // element in container
         if ($this->has($abstract)) {
             // retrieve the entry
@@ -248,12 +250,12 @@ class Container implements ContainerInterface, \ArrayAccess
 
         // Build argument list
         $arguments = [];
-        foreach ($parameters as $param) {
+        foreach ($parameters as $parameter) {
             // Get class
-            $class = $param->getClass();
+            $class = $parameter->getClass();
 
             // From argument array (class or parameter name)
-            $key = $class && isset($args[$class->name]) ? $class->name: $param->name;
+            $key = $class && isset($args[$class->name]) ? $class->name : $parameter->name;
             if (array_key_exists($key, $args)) {
                 $arguments[] = $args[$key];
                 unset($args[$key]);
@@ -273,16 +275,47 @@ class Container implements ContainerInterface, \ArrayAccess
             }
 
             // Skip optional parameter with default value
-            if ($param->isDefaultValueAvailable()) {
-                $arguments[] =  $param->getDefaultValue();
+            if ($parameter->isDefaultValueAvailable()) {
+                $arguments[] = $parameter->getDefaultValue();
                 continue;
             }
 
             // Couldn't resolve the dependency
-            throw new Exceptions\ContainerException("Unable to resolve parameter '{$param->name}' for function/method '{$reflection->getName()}'.");
+            throw new Exceptions\ContainerException(
+                "Unable to resolve parameter `{$this->getReflectionParameterName($parameter)}` for function/method `{$this->getReflectionFunctionName($reflection)}`."
+            );
         }
 
         return $arguments;
+    }
+
+    /**
+     * Helper method to get the type of a reflection paramter
+     * @param \ReflectionParameter $parameter
+     * @return NULL|\ReflectionType|string
+     */
+    private function getReflectionParameterName(\ReflectionParameter $parameter)
+    {
+        // parameter is a class
+        if ($class = $parameter->getClass()) {
+            return $class->getName() . ' \$' . $parameter->getName();
+        }
+
+        return $parameter->getName();
+    }
+
+    /**
+     * Helper method to retrieve the name of a ReflectionFunctionAbstract
+     * @param \ReflectionFunctionAbstract $reflection
+     * @return string
+     */
+    private function getReflectionFunctionName(\ReflectionFunctionAbstract $reflection)
+    {
+        // Class method
+        if ($reflection instanceof \ReflectionMethod) {
+            return $reflection->getDeclaringClass()->getName() . '::' . $reflection->getName();
+        }
+        return $reflection->getName();
     }
 
     /**
@@ -330,8 +363,8 @@ class Container implements ContainerInterface, \ArrayAccess
 
     /**
      * Sets an internal entry as property to the given value.
-     * @param string $internal    Identifier of the entry.
-     * @param mixed  $value The Value of the entry.
+     * @param string $internal Identifier of the entry.
+     * @param mixed $value The Value of the entry.
      */
     public function __set($internal, $value)
     {
