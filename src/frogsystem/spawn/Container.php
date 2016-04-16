@@ -250,12 +250,12 @@ class Container implements ContainerInterface, \ArrayAccess
 
         // Build argument list
         $arguments = [];
-        foreach ($parameters as $param) {
+        foreach ($parameters as $parameter) {
             // Get class
-            $class = $param->getClass();
+            $class = $parameter->getClass();
 
             // From argument array (class or parameter name)
-            $key = $class && isset($args[$class->name]) ? $class->name : $param->name;
+            $key = $class && isset($args[$class->name]) ? $class->name : $parameter->name;
             if (array_key_exists($key, $args)) {
                 $arguments[] = $args[$key];
                 unset($args[$key]);
@@ -275,23 +275,47 @@ class Container implements ContainerInterface, \ArrayAccess
             }
 
             // Skip optional parameter with default value
-            if ($param->isDefaultValueAvailable()) {
-                $arguments[] = $param->getDefaultValue();
+            if ($parameter->isDefaultValueAvailable()) {
+                $arguments[] = $parameter->getDefaultValue();
                 continue;
             }
 
             // Couldn't resolve the dependency
             throw new Exceptions\ContainerException(
-                sprintf(
-                    "Unable to resolve parameter '%s\$%s' for function/method '%s'.",
-                    ($class ? $class->getName() . ' ' : ''),
-                    $param->name,
-                    ($reflection instanceof \ReflectionMethod ? $reflection->getDeclaringClass()->getName() . '::' . $reflection->getName() : $reflection->getName())
-                )
+                "Unable to resolve parameter `{$this->getReflectionParameterName($parameter)}` for function/method `{$this->getReflectionFunctionName($reflection)}`."
             );
         }
 
         return $arguments;
+    }
+
+    /**
+     * Helper method to get the type of a reflection paramter
+     * @param \ReflectionParameter $parameter
+     * @return NULL|\ReflectionType|string
+     */
+    private function getReflectionParameterName(\ReflectionParameter $parameter)
+    {
+        // parameter is a class
+        if ($class = $parameter->getClass()) {
+            return $class->getName() . ' \$' . $parameter->getName();
+        }
+
+        return $parameter->getName();
+    }
+
+    /**
+     * Helper method to retrieve the name of a ReflectionFunctionAbstract
+     * @param \ReflectionFunctionAbstract $reflection
+     * @return string
+     */
+    private function getReflectionFunctionName(\ReflectionFunctionAbstract $reflection)
+    {
+        // Class method
+        if ($reflection instanceof \ReflectionMethod) {
+            return $reflection->getDeclaringClass()->getName() . '::' . $reflection->getName();
+        }
+        return $reflection->getName();
     }
 
     /**
