@@ -5,13 +5,11 @@ language: php
 matrix:
   fast_finish: true
   include:
-    - php: 5.6
     - php: 7
       env:
         - EXECUTE_COVERAGE=true
+    - php: 5.6
     - php: hhvm
-  allow_failures:
-    - php: 7
 
 notifications:
   email: false
