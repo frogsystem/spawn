@@ -1,5 +1,9 @@
-[![Latest Stable Version](https://poser.pugx.org/frogsystem/spawn/v/stable)](https://packagist.org/packages/frogsystem/spawn) [![Total Downloads](https://poser.pugx.org/frogsystem/spawn/downloads)](https://packagist.org/packages/frogsystem/spawn) [![Latest Unstable Version](https://poser.pugx.org/frogsystem/spawn/v/unstable)](https://packagist.org/packages/frogsystem/spawn) [![License](https://poser.pugx.org/frogsystem/spawn/license)](https://packagist.org/packages/frogsystem/spawn)
-[![Codacy Badge](https://www.codacy.com/project/badge/915b4386f900427e8b9e428b9d576e30)](https://www.codacy.com/app/mail_6/spawn)
+[![Latest Stable Version](https://poser.pugx.org/frogsystem/spawn/v/stable)](https://packagist.org/packages/frogsystem/spawn)
+[![Total Downloads](https://poser.pugx.org/frogsystem/spawn/downloads)](https://packagist.org/packages/frogsystem/spawn)
+[![Latest Unstable Version](https://poser.pugx.org/frogsystem/spawn/v/unstable)](https://packagist.org/packages/frogsystem/spawn)
+[![License](https://poser.pugx.org/frogsystem/spawn/license)](https://packagist.org/packages/frogsystem/spawn)
+[![Codacy Badge](https://api.codacy.com/project/badge/grade/915b4386f900427e8b9e428b9d576e30)](https://www.codacy.com/app/mrgrain/spawn)
+[![Codacy Badge](https://api.codacy.com/project/badge/coverage/915b4386f900427e8b9e428b9d576e30)](https://www.codacy.com/app/mrgrain/spawn)
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/a64ecd12-c01d-446f-b60e-3b4b5dc55f3e/mini.png)](https://insight.sensiolabs.com/projects/a64ecd12-c01d-446f-b60e-3b4b5dc55f3e)
 
 # Spawn
@@ -185,9 +189,4 @@ Delegate lookup enables sharing of entries across containers and allows to build
 - Implements delegate lookup
 - Enforce users to mainly add abstracts to their container
 - Add entries only through one single interface; other features are implemented by closures
-- Enforce users to heavily use the delegate lookup feature and the delegation queue
-
-# Outlook
-- Add an application interface (Runnable)
-- Add an interface to connect containers, thus creating an easy to use module system
-- Add other elementary features for IoC applications (yet to define...) 
+- Enforce users to use the delegate lookup feature and the delegation queue
