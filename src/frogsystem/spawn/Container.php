@@ -216,7 +216,7 @@ class Container implements ContainerInterface, \ArrayAccess
         // closures, functions and any other callable
         $reflection = new \ReflectionFunction($callable);
         $arguments = $this->inject($reflection, $args);
-        return call_user_func_array($callable, $arguments); // closures will loose scope if invoked by reflection
+        return $callable(...$arguments); // closures will loose scope if invoked by reflection
     }
 
     /**
