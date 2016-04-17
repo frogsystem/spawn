@@ -10,7 +10,6 @@ use Interop\Container\ContainerInterface;
  */
 class Container implements ContainerInterface, \ArrayAccess
 {
-
     /**
      * Library of the entries.
      * @var array
@@ -210,7 +209,7 @@ class Container implements ContainerInterface, \ArrayAccess
         if (is_array($callable)) {
             $reflection = new \ReflectionMethod($callable[0], $callable[1]);
         }
-        
+
         // closures, functions and any other callable
         if (!isset($reflection)) {
             $reflection = new \ReflectionFunction($callable);
@@ -266,41 +265,10 @@ class Container implements ContainerInterface, \ArrayAccess
             }
 
             // Couldn't resolve the dependency
-            throw new Exceptions\ContainerException(
-                "Unable to resolve parameter `{$this->getReflectionParameterName($parameter)}` for function/method `{$this->getReflectionFunctionName($reflection)}`."
-            );
+            throw new Exceptions\ParameterResolutionException($reflection, $parameter);
         }
 
         return $arguments;
-    }
-
-    /**
-     * Helper method to get the type of a reflection paramter
-     * @param \ReflectionParameter $parameter
-     * @return NULL|\ReflectionType|string
-     */
-    private function getReflectionParameterName(\ReflectionParameter $parameter)
-    {
-        // parameter is a class
-        if ($class = $parameter->getClass()) {
-            return $class->getName() . ' \$' . $parameter->getName();
-        }
-
-        return $parameter->getName();
-    }
-
-    /**
-     * Helper method to retrieve the name of a ReflectionFunctionAbstract
-     * @param \ReflectionFunctionAbstract $reflection
-     * @return string
-     */
-    private function getReflectionFunctionName(\ReflectionFunctionAbstract $reflection)
-    {
-        // Class method
-        if ($reflection instanceof \ReflectionMethod) {
-            return $reflection->getDeclaringClass()->getName() . '::' . $reflection->getName();
-        }
-        return $reflection->getName();
     }
 
     /**
