@@ -2,9 +2,11 @@
 namespace Frogsystem\Spawn;
 
 use Frogsystem\Spawn\Exceptions\InvalidArgumentException;
+use Frogsystem\Spawn\Exceptions\ParameterResolutionException;
 use Interop\Container\Exception\ContainerException;
 use Interop\Container\Exception\NotFoundException;
 use PHPUnit_Framework_TestCase;
+use RecursiveIteratorIterator;
 
 /**
  * Class ContainerTest
@@ -186,13 +188,18 @@ class ContainerTest extends PHPUnit_Framework_TestCase
         $this->app->make($object);
     }
 
+    public static function staticInvocationHelper()
+    {
+        return 'staticMethodResult';
+    }
+
     public function testInvokeStaticClassMethod()
     {
         // Act
-        $result = $this->app->invoke('PDO::getAvailableDrivers');
+        $result = $this->app->invoke('\\Frogsystem\\Spawn\\ContainerTest::staticInvocationHelper');
 
         // Assert
-        $this->assertSame(pdo_drivers(), $result);
+        $this->assertSame('staticMethodResult', $result);
     }
 
     public function testInvokeArrayCallable()
@@ -274,5 +281,24 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 
     public function testInvokeResolutionFailed()
     {
+        // Arrange
+        $callable = function ($frog) {
+            return $frog;
+        };
+
+        // Expect
+        $this->expectException(ParameterResolutionException::class);
+
+        // Act
+        $this->app->invoke($callable);
+    }
+
+    public function testInvokeResolutionFailedTypedArgument()
+    {
+        // Expect
+        $this->expectException(ParameterResolutionException::class);
+
+        // Act
+        $this->app->make(RecursiveIteratorIterator::class);
     }
 }
