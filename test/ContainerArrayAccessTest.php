@@ -53,7 +53,7 @@ class ContainerArrayAccessTest extends PHPUnit_Framework_TestCase
         unset($this->app['something']);
 
         // Assert
-        $this->assertFalse(isset($container['something']));
+        $this->assertFalse(isset($this->app['something']));
     }
 
     public function testOffsetGet()

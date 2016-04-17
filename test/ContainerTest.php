@@ -185,4 +185,94 @@ class ContainerTest extends PHPUnit_Framework_TestCase
         // Act
         $this->app->make($object);
     }
+
+    public function testInvokeStaticClassMethod()
+    {
+        // Act
+        $result = $this->app->invoke('PDO::getAvailableDrivers');
+
+        // Assert
+        $this->assertSame(pdo_drivers(), $result);
+    }
+
+    public function testInvokeArrayCallable()
+    {
+        // Arrange and expect
+        $callable = $this->getMock(\stdClass::class, array('anything'));
+        $callable->expects($this->once())->method('anything');
+
+        // Act
+        $this->app->invoke([$callable, 'anything']);
+    }
+
+    public function testInvokeClosure()
+    {
+        // Arrange and expect
+        $value = new \stdClass();
+        $callable = function () use ($value) {
+            return $value;
+        };
+
+        // Act
+        $result = $this->app->invoke($callable);
+
+        // Assert
+        $this->assertSame($value, $result);
+    }
+
+    public function testInvokeWithNamedArguments()
+    {
+        // Arrange and expect
+        $frog = "Greenfrog";
+        $callable = function ($frog) {
+            return $frog;
+        };
+
+        // Act
+        $result = $this->app->invoke($callable, ['frog' => $frog]);
+
+        // Assert
+        $this->assertSame($frog, $result);
+    }
+
+    public function testInvokeWithTypedArguments()
+    {
+        // Arrange and expect
+        $name = 'Greenfrog';
+        $frog = $this->getMock(Container::class, array('gut'));
+        $frog->method('gut')
+            ->willReturn(strrev($name));
+        $frogHunter = $this->getMock(\stdClass::class, array('hunt'));
+        $frogHunter->expects($this->once())
+            ->method('hunt')
+            ->with($this->equalTo($frog))
+            ->willReturn($frog->gut());
+        $callable = function (\stdClass $hunter, Container $frog) {
+            return $hunter->hunt($frog);
+        };
+
+        // Act
+        $result = $this->app->invoke($callable, [Container::class => $frog, \stdClass::class => $frogHunter]);
+
+        // Assert
+        $this->assertSame(strrev($name), $result);
+    }
+
+    public function testInvokeUseDefaultValues()
+    {
+        // Arrange and expect
+        $callable = function ($frog = 'toad') {
+            return $frog;
+        };
+
+        // Act
+        $result = $this->app->invoke($callable);
+
+        // Assert
+        $this->assertSame('toad', $result);
+    }
+
+    public function testInvokeResolutionFailed()
+    {
+    }
 }
