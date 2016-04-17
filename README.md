@@ -111,7 +111,7 @@ $app->has('MyEntry'); // true or false
 ### Internals
 You must only use the container to define your abstracts. They are meant to be shared with other containers and an implementation may be replaced by a different one during runtime. However, you will have cases where your code depends on a specific instance. Those internals are hold separately from the rest of the container and therefore have to be set as properties:
 ```php
-$app->config = $app->find('MyConfig');
+$app->config = $app->make('MyConfig');
 ```
 Using the magic setter will provide you with the same API as set out above. You may also define an internal explicit as class property, but a callable __will not__ be invoked on retrieval if set this way.
 
@@ -126,19 +126,11 @@ $app->config = $app['ConfigContract'] = $this->factory('MyConfig');
 ```
 
 ### Dependency Injection
-Spawn provides you with three methods for using Dependency Injection and the Inversion of Control pattern. `find` and `make` will provide you with implementations for abstracts; `invoke` will execute any callable. All methods are using Dependency Injection to resolve arguments. This means, if the invoked callable or class constructor has **any** parameters, those methods will use the container to find a suitable implementation and inject it in the argument list.
+Spawn provides you with two methods for using Dependency Injection and the Inversion of Control pattern. Use `make` to create new instances of abstracts; and use `invoke` to execute callables with filled-in dependencies. Both methods will using Dependency Injection to resolve their arguments. This means, if the invoked callable or class constructor has **any** parameters, those methods will use the container to find a suitable implementation and inject it in the argument list.
 
-Use `find` to get any previously stored implementation for an abstract or to make a new one if need:
-```php
-class MyImplementation {
-    __construct(OtherClass $other);
-}
-$app['MyClass'] = $this->factory('MyImplementation');
-$app->find('MyClass');
-```
-To follow the Inversion of Control pattern, you should always use `find` to retrieve objects. The only exceptions from this rule are the initially definitions, usually made within a Service Provider class.
+Additional any value retrieved from the container via `get` or `ArrayAccess` which is a callable, will be invoked using the very same `invoke` method. Thus they will also have their dependencies injected.
 
-In this case you may use `make` to create an object from a concrete class: 
+Use `make` to create an object from a concrete class:
 ```php
 class MyClass {
     __construct(OtherClass $other);
@@ -160,7 +152,7 @@ $app->invoke($callable); // will print 'Found!'
 ```
 
 #### Additional arguments
-You may also pass additional arguments in an array to those three methods. It allows you to override dependency lookup on a per case basis. During the argument selection, entries will first be looked up in the array, matching the parameters class and name against array keys.
+You may also pass additional arguments in an array to these methods. It allows you to override dependency lookup on a per case basis. During the argument selection, entries will first be looked up in the array, matching the parameters class and name against array keys.
 ```php
 class MyClass {
     __construct(OtherClass $other, $id);
@@ -168,17 +160,16 @@ class MyClass {
         print $name;
     }
 }
-$app->find('MyClass', ['id' => 42]);
 $object = $app->make('MyClass', ['id' => 42]); // $id will be 42, $other will be resolved through the container
 $app->invoke([$object, 'do'], ['name' => 'Spawn']); // will print 'Spawn'
 ```
 
-As `get` will invoke a callable before returning it, you may also pass additional arguments to this method. However, there are only few use cases and you shouldn't rely on it.  
+As mentioned above, `get` will also invoke a callable before returning it. Thus you may pass additional arguments to this method, as well.
 
 ### Delegate lookup
-Delegate lookup was introduced by the Container Interoperability standard. A request to the container is performed within the container. But **if the fetched entry has dependencies, instead of performing the dependency lookup in the container, the lookup is performed on the delegate container**. In other words: Whenever dependency injection happens, dependencies will be resolved through the delegate container.
+Delegate lookup is a featured introduced by the Container Interoperability standard. A request to the container is performed within the container. But **if the fetched entry has dependencies, instead of performing the dependency lookup in the container, the lookup is performed on the delegate container**. In other words: Whenever dependency injection happens, dependencies will be resolved through the delegate container.
 
-Dependency lookup in Spawn is always delegated. However, by default the container delegates the lookup to itself.
+Dependency lookup in Spawn is always delegated. By default the container delegates the lookup to itself.
 Set a different delegate container via constructor argument or use the use the `delegate` method:
 ```php
 $app = new Container($delegateContainer);
@@ -190,6 +181,6 @@ Delegate lookup enables sharing of entries across containers and allows to build
 ## Design principles
 - Implements container-interop
 - Implements delegate lookup
-- Enforce users to mainly add abstracts to their container
-- Add entries only through one single interface; other features are implemented by closures
+- Separates storage of 'public' abstracts and internals
+- Adding entries always via the same single method; all other features are implemented using closures
 - Enforce users to use the delegate lookup feature and the delegation queue

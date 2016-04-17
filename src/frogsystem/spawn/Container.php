@@ -176,13 +176,13 @@ class Container implements ContainerInterface, \ArrayAccess
      * @param $concrete
      * @param array $args
      * @return mixed
-     * @throws Exceptions\ContainerException
+     * @throws Exceptions\InvalidArgumentException
      */
     public function make($concrete, array $args = [])
     {
         // build only from strings
-        if (!is_string($concrete)) {
-            throw new Exceptions\ContainerException("Unable to find concrete {(string) $concrete}");
+        if (!is_object($concrete) && !is_scalar($concrete) && !is_null($concrete)) {
+            throw new Exceptions\InvalidArgumentException();
         }
 
         // get reflection and parameters
@@ -192,23 +192,6 @@ class Container implements ContainerInterface, \ArrayAccess
         // Return new instance
         $arguments = $constructor ? $this->inject($constructor, $args) : [];
         return $reflection->newInstanceArgs($arguments);
-    }
-
-    /**
-     * Find a instance of any abstract in delegate or make a new object from a concrete if possible.
-     * @param string $abstract
-     * @param array $args
-     * @return mixed
-     */
-    public function find($abstract, array $args = [])
-    {
-        // try to get abstract from delegate
-        if ($this->delegate->has($abstract)) {
-            return $this->delegate->get($abstract, $args);
-        }
-
-        // Try to return new instance
-        return $this->make($abstract, $args);
     }
 
     /**

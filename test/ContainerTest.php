@@ -1,6 +1,9 @@
 <?php
 namespace Frogsystem\Spawn;
 
+use Frogsystem\Spawn\Exceptions\InvalidArgumentException;
+use Interop\Container\Exception\ContainerException;
+use Interop\Container\Exception\NotFoundException;
 use PHPUnit_Framework_TestCase;
 
 /**
@@ -29,12 +32,12 @@ class ContainerTest extends PHPUnit_Framework_TestCase
             ->will($this->returnValue($object));
 
         // Act
-        $this->app['OnceTest'] = $this->app->once(function() use ($mock) {
+        $this->app['OnceTest'] = $this->app->once(function () use ($mock) {
             return call_user_func(array($mock, 'callback'));
         });
 
         // Act && Assert
-        for ($i=0; $i<=5; $i++) {
+        for ($i = 0; $i <= 5; $i++) {
             $result = $this->app->get('OnceTest');
             $this->assertSame($object, $result);
         }
@@ -53,7 +56,7 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 
         // Assert
         $this->assertInstanceOf('\stdClass', $first);
-        for ($i=0; $i<=5; $i++) {
+        for ($i = 0; $i <= 5; $i++) {
             $result = $this->app->get('OneTest');
             $this->assertSame($first, $result);
         }
@@ -66,7 +69,7 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 
         // Act && Assert
         $last = $this->app->get('FactoryTest');
-        for ($i=0; $i<=5; $i++) {
+        for ($i = 0; $i <= 5; $i++) {
             $current = $this->app->get('FactoryTest');
             $this->assertNotSame($last, $current);
             $last = $current;
@@ -86,5 +89,100 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 
         // Assert
         $this->assertSame(array($mock, 'callback'), $result);
+    }
+
+    public function testDelegateConstructor()
+    {
+        // Arrange
+        $item = new \stdClass();
+        $delegate = $this->getMock(Container::class, array('has', 'get'));
+        $delegate->method('has')
+            ->with($this->equalTo(\stdClass::class))
+            ->willReturn($this->returnValue(true));
+        $delegate->expects($this->once())
+            ->method('get')
+            ->with($this->equalTo(\stdClass::class))
+            ->willReturn($item);
+
+        // Act
+        $this->app = new Container($delegate);
+        $this->app['something'] = function (\stdClass $object) {
+            return $object;
+        };
+        $result = $this->app->get('something');
+
+        // Assert
+        $this->assertSame($item, $result);
+    }
+
+    public function testSetDelegate()
+    {
+        // Arrange
+        $item = new \stdClass();
+        $delegate = $this->getMock(Container::class, array('has', 'get'));
+        $delegate->method('has')
+            ->with($this->equalTo(\stdClass::class))
+            ->willReturn(true);
+        $delegate->expects($this->once())
+            ->method('get')
+            ->with($this->equalTo(\stdClass::class))
+            ->willReturn($item);
+        $this->app['something'] = function (\stdClass $object) {
+            return $object;
+        };
+
+        // Act
+        $before = $this->app->get('something');
+        $this->app->delegate($delegate);
+        $after = $this->app->get('something');
+
+        // Assert
+        $this->assertNotSame($item, $before);
+        $this->assertSame($item, $after);
+    }
+
+    public function testNotFound()
+    {
+        // Arrange
+        $container = $this->getMock(Container::class, array('has'));
+        $container->expects($this->once())
+            ->method('has')
+            ->with($this->equalTo('whatever'))
+            ->willReturn(false);
+
+        // Expect
+        $this->expectException(NotFoundException::class);
+
+        // Act
+        $container->get('whatever');
+    }
+
+    public function testRetrieveScalar()
+    {
+        // Arrange and expect
+        $container = $this->getMock(Container::class, array('invoke'));
+        $container->expects($this->never())
+            ->method('invoke');
+
+        $scalar = 'test string';
+        $this->app['scalar'] = $scalar;
+
+        // Act
+        $result = $this->app->get('scalar');
+
+        // Assert
+        $this->assertSame($scalar, $result);
+    }
+
+    public function testFailToMakeFromArray()
+    {
+        // Arrange
+        $object = array();
+
+        // Expect
+        $this->expectException(InvalidArgumentException::class);
+
+        // Act
+        $this->app->make($object);
     }
 }
