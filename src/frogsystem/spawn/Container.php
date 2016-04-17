@@ -209,14 +209,16 @@ class Container implements ContainerInterface, \ArrayAccess
         }
         if (is_array($callable)) {
             $reflection = new \ReflectionMethod($callable[0], $callable[1]);
-            $arguments = $this->inject($reflection, $args);
-            return $reflection->invokeArgs($callable[0], $arguments);
+        }
+        
+        // closures, functions and any other callable
+        if (!isset($reflection)) {
+            $reflection = new \ReflectionFunction($callable);
         }
 
-        // closures, functions and any other callable
-        $reflection = new \ReflectionFunction($callable);
+        // inject arguments
         $arguments = $this->inject($reflection, $args);
-        return $callable(...$arguments); // closures will loose scope if invoked by reflection
+        return $callable(...$arguments);
     }
 
     /**
