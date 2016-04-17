@@ -10,7 +10,6 @@ use Interop\Container\ContainerInterface;
  */
 class Container implements ContainerInterface, \ArrayAccess
 {
-
     /**
      * Library of the entries.
      * @var array
@@ -176,13 +175,13 @@ class Container implements ContainerInterface, \ArrayAccess
      * @param $concrete
      * @param array $args
      * @return mixed
-     * @throws Exceptions\ContainerException
+     * @throws Exceptions\InvalidArgumentException
      */
     public function make($concrete, array $args = [])
     {
         // build only from strings
-        if (!is_string($concrete)) {
-            throw new Exceptions\ContainerException("Unable to find concrete {(string) $concrete}");
+        if (!is_object($concrete) && !is_scalar($concrete) && !is_null($concrete)) {
+            throw new Exceptions\InvalidArgumentException();
         }
 
         // get reflection and parameters
@@ -192,23 +191,6 @@ class Container implements ContainerInterface, \ArrayAccess
         // Return new instance
         $arguments = $constructor ? $this->inject($constructor, $args) : [];
         return $reflection->newInstanceArgs($arguments);
-    }
-
-    /**
-     * Find a instance of any abstract in delegate or make a new object from a concrete if possible.
-     * @param string $abstract
-     * @param array $args
-     * @return mixed
-     */
-    public function find($abstract, array $args = [])
-    {
-        // try to get abstract from delegate
-        if ($this->delegate->has($abstract)) {
-            return $this->delegate->get($abstract, $args);
-        }
-
-        // Try to return new instance
-        return $this->make($abstract, $args);
     }
 
     /**
@@ -226,14 +208,16 @@ class Container implements ContainerInterface, \ArrayAccess
         }
         if (is_array($callable)) {
             $reflection = new \ReflectionMethod($callable[0], $callable[1]);
-            $arguments = $this->inject($reflection, $args);
-            return $reflection->invokeArgs($callable[0], $arguments);
         }
 
         // closures, functions and any other callable
-        $reflection = new \ReflectionFunction($callable);
+        if (!isset($reflection)) {
+            $reflection = new \ReflectionFunction($callable);
+        }
+
+        // inject arguments
         $arguments = $this->inject($reflection, $args);
-        return call_user_func_array($callable, $arguments); // closures will loose scope if invoked by reflection
+        return $callable(...$arguments);
     }
 
     /**
@@ -281,41 +265,10 @@ class Container implements ContainerInterface, \ArrayAccess
             }
 
             // Couldn't resolve the dependency
-            throw new Exceptions\ContainerException(
-                "Unable to resolve parameter `{$this->getReflectionParameterName($parameter)}` for function/method `{$this->getReflectionFunctionName($reflection)}`."
-            );
+            throw new Exceptions\ParameterResolutionException($reflection, $parameter);
         }
 
         return $arguments;
-    }
-
-    /**
-     * Helper method to get the type of a reflection paramter
-     * @param \ReflectionParameter $parameter
-     * @return NULL|\ReflectionType|string
-     */
-    private function getReflectionParameterName(\ReflectionParameter $parameter)
-    {
-        // parameter is a class
-        if ($class = $parameter->getClass()) {
-            return $class->getName() . ' \$' . $parameter->getName();
-        }
-
-        return $parameter->getName();
-    }
-
-    /**
-     * Helper method to retrieve the name of a ReflectionFunctionAbstract
-     * @param \ReflectionFunctionAbstract $reflection
-     * @return string
-     */
-    private function getReflectionFunctionName(\ReflectionFunctionAbstract $reflection)
-    {
-        // Class method
-        if ($reflection instanceof \ReflectionMethod) {
-            return $reflection->getDeclaringClass()->getName() . '::' . $reflection->getName();
-        }
-        return $reflection->getName();
     }
 
     /**

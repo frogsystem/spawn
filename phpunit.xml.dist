@@ -3,5 +3,9 @@
         <testsuite name="Frogsystem\\Spawn Tests">
             <directory>./test</directory>
         </testsuite>
-    </testsuites>
+    </testsuites><filter>
+    <whitelist processUncoveredFilesFromWhitelist="true">
+        <directory suffix=".php">./src</directory>
+    </whitelist>
+</filter>
 </phpunit>
